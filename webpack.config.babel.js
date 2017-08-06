@@ -4,7 +4,6 @@ import path from 'path'
 const { NODE_ENV } = process.env
 
 const plugins = [
-  new webpack.optimize.OccurenceOrderPlugin(),
   new webpack.DefinePlugin({
     'process.env.NODE_ENV': JSON.stringify(NODE_ENV)
   })
@@ -39,7 +38,7 @@ export default {
   output: {
     path: path.join(__dirname, 'dist'),
     filename,
-    library: 'ReduxCrudStore',
+    library: 'ReduxSagaApi',
     libraryTarget: 'umd'
   },
 

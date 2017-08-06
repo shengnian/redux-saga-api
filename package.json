@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-api",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Framework CRUD REST style api function with redux-saga",
   "main": "lib/index.js",
   "files": [
