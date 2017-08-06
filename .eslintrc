@@ -1,0 +1,36 @@
+{
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "parser": "babel-eslint",
+  "plugins": [
+    "flowtype"
+  ],
+  // issuse bug: https://github.com/airbnb/javascript/issues/1488
+  "extends": "eslint-config-airbnb",
+  "globals": {
+    "describe": false,
+    "it": false
+  },
+  "rules": {
+    "semi": [2, "never"],
+    "indent": [2, 2, {"SwitchCase": 1}],
+    "comma-dangle": [2, "never"],
+    "id-length": 0,
+    "no-unused-vars": 0,
+    "camelcase": 0,
+    "new-cap": 0,
+    "no-duplicate-imports": 0,  // type imports require duplicate imports
+    "import/no-duplicates": 0,  // type imports require duplicate imports
+    "react/jsx-first-prop-new-line": 0,
+    "jsx-a11y/href-no-hash": "off",
+    "jsx-a11y/anchor-is-valid": ["warn", { "aspects": ["invalidHref"] }],
+    "space-before-function-paren": ["error", "always"]
+  },
+  "settings": {
+    "flowtype": {
+      "onlyFilesWithFlowAnnotation": true
+    }
+  }
+}
