@@ -1,5 +1,6 @@
 /* @flow */
 /* global Generator */
+// import 'regenerator-runtime/runtime'
 
 import { all, take, fork, put, call } from 'redux-saga/effects'
 
@@ -10,7 +11,7 @@ import type { Effect } from 'redux-saga'
 import type { CrudAction } from './actionTypes'
 
 import {
-  FETCH, FETCH_ONE, CREATE, UPDATE, DELETE, API_CALL, GARBAGE_COLLECT
+  FETCH, FETCH_ONE, CREATE, UPDATE, DELETE, DELETE_BUCKET, API_CALL, GARBAGE_COLLECT
 } from './actionTypes'
 
 // Generator type parameters are: Generator<+Yield,+Return,-Next>
@@ -25,85 +26,80 @@ function* garbageCollector () {
   }
 }
 
-export const apiFetch = fetch =>
-  function* _apiFetch (action: CrudAction<any>): Generator<Effect, void, any> {
-    const { method, path, params, data, fetchConfig } = action.payload
-    const { success, failure } = action.meta
-    const meta = {
-      ...action.meta,
-      fetchTime: Date.now()
-    }
-
-    try {
-      const response = yield call(fetch[method], path, { params, data, fetchConfig })
-      yield put({ meta, type: success, payload: response })
-    } catch (error) {
-      yield put({ meta, type: failure, payload: error, error: true })
-    }
+export function* apiFetch (fetch, action: CrudAction<any>): Generator<Effect, void, any> {
+  const { method, path, params, data, fetchConfig } = action.payload
+  const { success, failure } = action.meta
+  const meta = {
+    ...action.meta,
+    fetchTime: Date.now()
   }
+
+  try {
+    const response = yield call(fetch[method], path, { params, data, fetchConfig })
+    yield put({ meta, type: success, payload: response })
+  } catch (error) {
+    yield put({ meta, type: failure, payload: error, error: true })
+  }
+}
 
 const watchFetch = fetch => function* _watchFetch () {
   while (true) {
     const action = yield take(FETCH)
-    yield fork(apiFetch, fetch)(action)
+    yield fork(apiFetch, fetch, action)
   }
 }
 
 const watchFetchOne = fetch => function* _watchFetchOne () {
   while (true) {
     const action = yield take(FETCH_ONE)
-    // yield fork(apiFetch, fetch, action)
-    yield fork(apiFetch, fetch)(action)
+    yield fork(apiFetch, fetch, action)
   }
-  // yield* takeEvery(FETCH_ONE, apiGeneric(apiClient))
 }
 
 const watchCreate = fetch => function* _watchCreate () {
   while (true) {
     const action = yield take(CREATE)
-    // yield fork(apiFetch, fetch, action)
-    yield fork(apiFetch, fetch)(action)
+    yield fork(apiFetch, fetch, action)
   }
-  // yield* takeEvery(CREATE, apiGeneric(apiClient))
 }
 
 const watchUpdate = fetch => function* _watchUpdate () {
   while (true) {
     const action = yield take(UPDATE)
-    // yield fork(apiFetch, fetch, action)
-    yield fork(apiFetch, fetch)(action)
+    yield fork(apiFetch, fetch, action)
   }
-  // yield* takeEvery(UPDATE, apiGeneric(apiClient))
 }
 
 const watchDelete = fetch => function* _watchDelete () {
   while (true) {
     const action = yield take(DELETE)
-    // yield fork(apiFetch, fetch, action)
-    yield fork(apiFetch, fetch)(action)
+    yield fork(apiFetch, fetch, action)
   }
-  // yield* takeEvery(DELETE, apiGeneric(apiClient))
+}
+
+const watchBucketDelete = fetch => function* _watchDeleteBucket () {
+  while (true) {
+    const action = yield take(DELETE_BUCKET)
+    yield fork(apiFetch, fetch, action)
+  }
 }
 
 const watchApiCall = fetch => function* _watchApiCall () {
   while (true) {
     const action = yield take(API_CALL)
-    // yield fork(apiFetch, fetch, action)
-    yield fork(apiFetch, fetch)(action)
+    yield fork(apiFetch, fetch, action)
   }
-  // yield* takeEvery(API_CALL, apiGeneric(apiClient))
 }
 
-export default function crudSaga (apiClient: Object) {
-  return function* _crudSaga (): Generator<Effect, void, any> {
-    yield all([
-      fork(watchFetch(apiClient)),
-      fork(watchFetchOne(apiClient)),
-      fork(watchCreate(apiClient)),
-      fork(watchUpdate(apiClient)),
-      fork(watchDelete(apiClient)),
-      fork(watchApiCall(apiClient)),
-      fork(garbageCollector)
-    ])
-  }
+export default function* crudSaga (apiClient: Object) : Generator<Effect, void, any> {
+  yield all([
+    fork(watchFetch(apiClient)),
+    fork(watchFetchOne(apiClient)),
+    fork(watchCreate(apiClient)),
+    fork(watchUpdate(apiClient)),
+    fork(watchDelete(apiClient)),
+    fork(watchBucketDelete(apiClient)),
+    fork(watchApiCall(apiClient)),
+    fork(garbageCollector)
+  ])
 }

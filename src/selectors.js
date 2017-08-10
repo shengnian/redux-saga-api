@@ -1,10 +1,9 @@
 /* @flow */
-/* global T */
 /* eslint no-use-before-define: 0 */
 
 import isEqual from 'lodash.isequal'
 import {
-  FETCH, FETCH_ONE, CREATE, UPDATE, DELETE
+  FETCH, FETCH_ONE
 } from './actionTypes'
 
 import type { CrudAction, ID, Model } from './actionTypes'
@@ -45,6 +44,7 @@ export function select<T> (
   const params = action.payload.params
   let id
   let selection
+
   switch (action.type) {
     case FETCH:
       selection = selectCollection(model, crud, params)
@@ -173,10 +173,12 @@ type ActionStatusSelection<T> = {
 }
 
 export function selectActionStatus<T> (
-  modelName: Model, crud: State,
+  modelName: Model,
+  crud: State,
   action: 'create' | 'update' | 'delete'): ActionStatusSelection<T> {
   const rawStatus = (crud[modelName] &&
     crud[modelName].actionStatus && crud[modelName].actionStatus[action]) || {}
+
   const { pending = false, id = null, isSuccess = null, payload = null } = rawStatus
 
   if (pending === true) {
@@ -186,12 +188,14 @@ export function selectActionStatus<T> (
     return {
       id,
       pending,
+      isSuccess,
       response: (payload: any)
     }
   }
   return {
     id,
     pending,
+    isSuccess,
     error: (payload: any)
   }
 }

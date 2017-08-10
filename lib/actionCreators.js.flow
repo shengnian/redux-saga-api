@@ -7,9 +7,11 @@ import {
   CREATE, CREATE_SUCCESS, CREATE_ERROR,
   UPDATE, UPDATE_SUCCESS, UPDATE_ERROR,
   DELETE, DELETE_SUCCESS, DELETE_ERROR,
+  DELETE_BUCKET, DELETE_BUCKET_SUCCESS, DELETE_BUCKET_ERROR,
   CLEAR_ACTION_STATUS, API_CALL, CLEAR_MODEL_DATA
 } from './actionTypes'
 
+/* eslint-disable no-unused-vars */
 import type {
   Action,
   ClearActionStatus,
@@ -24,6 +26,7 @@ type Opts = {
   fetchConfig?: Object
 }
 
+// eslint-disable-next-line
 export function fetchCollection<T> (
   model: string,
   path: string,
@@ -74,17 +77,21 @@ export function fetchRecord<T> (
 }
 
 export function createRecord<T> (
-  model: string, path: string, data: $Shape<T> = {},
-  params: Object = {}, opts: Opts = {}): CrudAction<T> {
+  model: string,
+  path: string,
+  data: $Shape<T> = {},
+  params: Object = {},
+  opts: Opts = {}
+): CrudAction<T> {
   const fetchConfig = opts.fetchConfig || undefined
   const method = opts.method || 'post'
-
   return {
     type: CREATE,
     meta: {
       success: CREATE_SUCCESS,
       failure: CREATE_ERROR,
-      model
+      model,
+      idName: opts.idName || 'id'
     },
     payload: {
       fetchConfig,
@@ -121,8 +128,11 @@ export function updateRecord<T> (
 }
 
 export function deleteRecord (
-  model: string, id: ID, path: string,
-  params: Object = {}, opts: Opts = {}): CrudAction<void> {
+  model: string,
+  id: ID,
+  path: string,
+  params: Object = {},
+  opts: Opts = {}): CrudAction<void> {
   const fetchConfig = opts.fetchConfig || undefined
   const method = opts.method || 'delete'
 
@@ -137,6 +147,33 @@ export function deleteRecord (
     payload: {
       fetchConfig,
       method,
+      path,
+      params
+    }
+  }
+}
+
+export function deleteBucketRecord (
+  model: string,
+  ids: Array = [],
+  path: string,
+  params: Object = {},
+  opts: Opts = {}): CrudAction<void> {
+  const fetchConfig = opts.fetchConfig || undefined
+  const method = opts.method || 'post'
+
+  return {
+    type: DELETE_BUCKET,
+    meta: {
+      success: DELETE_BUCKET_SUCCESS,
+      failure: DELETE_BUCKET_ERROR,
+      model,
+      ids
+    },
+    payload: {
+      fetchConfig,
+      method,
+      data: ids,
       path,
       params
     }

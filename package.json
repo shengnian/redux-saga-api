@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-api",
-  "version": "1.0.2",
+  "version": "1.0.8",
   "description": "Framework CRUD REST style api function with redux-saga",
   "main": "lib/index.js",
   "files": [
@@ -12,8 +12,8 @@
   "scripts": {
     "clean": "rimraf lib dist es",
     "build": "npm run build:commonjs && npm run build:types && npm run build:umd && npm run build:umd:min && npm run build:es",
-    "prepublish": "npm run clean && npm run test && npm run build",
-    "postpublish": "git add -A package.json src dist lib es && git commit -m \"publish v${npm_package_version}\"; scripts/tag-with-changelog.sh v${npm_package_version} && git push && git push --tags",
+    "prepublishOnly": "npm run clean && npm run test && npm run build",
+    "postpublish": "git add -A package.json src lib es && git commit -m \"publish v1.0.8\"; scripts/tag-with-changelog.sh v1.0.8 && git push && git push --tags",
     "posttest": "npm run lint",
     "flow": "flow check",
     "lint": "eslint src test",
@@ -48,9 +48,10 @@
     "babel-eslint": "^7.2.3",
     "babel-loader": "^7.1.1",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-polyfill": "^6.23.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
     "cross-env": "^5.0.3",
     "deep-freeze": "0.0.1",
     "eslint": "^4.4.0",
@@ -61,6 +62,8 @@
     "eslint-plugin-react": "^7.1.0",
     "estraverse-fb": "^1.3.2",
     "expect": "^1.20.2",
+    "flow": "^0.2.3",
+    "flow-bin": "^0.52.0",
     "mocha": "^3.5.0",
     "nyc": "^11.1.0",
     "recursive-copy": "^2.0.6",
@@ -68,8 +71,7 @@
     "webpack": "^3.4.1"
   },
   "dependencies": {
-    "flow": "^0.2.3",
-    "flow-bin": "^0.52.0",
+    "babel-polyfill": "^6.23.0",
     "global": "^4.3.2",
     "istanbul": "^0.4.5",
     "lodash.isequal": "^4.5.0",

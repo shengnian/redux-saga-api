@@ -1,4 +1,5 @@
 /* eslint no-case-declarations: 0 */
+/* eslint-disable no-unused-vars */
 
 import isEqual from 'lodash.isequal'
 import {
@@ -7,6 +8,7 @@ import {
   CREATE, CREATE_SUCCESS, CREATE_ERROR,
   UPDATE, UPDATE_SUCCESS, UPDATE_ERROR,
   DELETE, DELETE_SUCCESS, DELETE_ERROR,
+  DELETE_BUCKET, DELETE_BUCKET_SUCCESS, DELETE_BUCKET_ERROR,
   CLEAR_ACTION_STATUS, API_CALL, GARBAGE_COLLECT,
   CLEAR_MODEL_DATA
 } from './actionTypes'
@@ -47,8 +49,9 @@ const initialState = {}
  */
 
 // server data is canonical, so blast away the old data
-export function byIdReducer (state = byIdInitialState, action) {
+export const fetchByIdReducer = (state = byIdInitialState, action) => {
   const id = action.meta ? action.meta.id : undefined
+  const ids = action.meta ? action.meta.ids : []
   const idName = action.meta ? action.meta.idName : 'id'
   let newState // should only be used once per invocation
   switch (action.type) {
@@ -87,14 +90,15 @@ export function byIdReducer (state = byIdInitialState, action) {
           record: null
         }
       })
-    case CREATE_SUCCESS:
+    case CREATE_SUCCESS: {
       return Object.assign({}, state, {
-        [action.payload.id]: {
+        [action.payload[idName]]: {
           fetchTime: action.meta.fetchTime,
           error: null,
           record: action.payload
         }
       })
+    }
     case UPDATE:
       return Object.assign({}, state, {
         [id]: {
@@ -115,6 +119,13 @@ export function byIdReducer (state = byIdInitialState, action) {
       newState = Object.assign({}, state)
       delete newState[id]
       return newState
+    case DELETE_BUCKET_SUCCESS: {
+      newState = Object.assign({}, state)
+      for (let i = 0, len = ids.length; i < len; i += 1) {
+        delete newState[ids[i]]
+      }
+      return newState
+    }
     case GARBAGE_COLLECT:
       const tenMinutesAgo = action.meta.now - (10 * 60 * 1000)
       newState = Object.assign({}, state)
@@ -132,7 +143,7 @@ export function byIdReducer (state = byIdInitialState, action) {
 /*
  * Note: fetchTime of null means "needs fetch"
  */
-export function collectionReducer (state = collectionInitialState, action) {
+export const fetchCollectionReducer = (state = collectionInitialState, action) => {
   const idName = action.meta ? action.meta.idName : 'id'
   switch (action.type) {
     case FETCH:
@@ -141,10 +152,10 @@ export function collectionReducer (state = collectionInitialState, action) {
         fetchTime: 0,
         error: null
       })
-    case FETCH_SUCCESS:
+    case FETCH_SUCCESS: {
       const originalPayload = action.payload || {}
-      const payload = ('content' in originalPayload) ? action.payload.content : action.payload
-      const otherInfo = ('content' in originalPayload) ? originalPayload : {}
+      const payload = ('content' in action.payload) ? originalPayload.content : action.payload
+      const otherInfo = ('content' in action.payload) ? originalPayload : {}
       delete otherInfo.content
       const ids = payload.map(elt => (elt[idName]))
       return Object.assign({}, state, {
@@ -154,6 +165,7 @@ export function collectionReducer (state = collectionInitialState, action) {
         error: null,
         fetchTime: action.meta.fetchTime
       })
+    }
     case FETCH_ERROR:
       return Object.assign({}, state, {
         params: action.meta.params,
@@ -165,31 +177,37 @@ export function collectionReducer (state = collectionInitialState, action) {
 }
 
 /* eslint-disable no-shadow, no-use-before-define */
-export function collectionsReducer (
+export const fetchCollectionsReducer = (
   state = collectionsInitialState, action,
-  { collectionReducer = collectionReducer } = {}) {
+  { collectionReducer = fetchCollectionReducer } = {}) => {
   /* eslint-enable no-shadow, no-use-before-define */
   switch (action.type) {
     case FETCH:
     case FETCH_SUCCESS:
-    case FETCH_ERROR:
+    case FETCH_ERROR: {
       // create the collection for the given params if needed
       // entry will be undefined or [index, existingCollection]
       if (action.meta.params === undefined) {
         return state
       }
-      const index = state.findIndex(coll => (
-        isEqual(coll.params, action.meta.params)
-      ))
-      if (index === -1) {
-        return state.concat([collectionReducer(undefined, action)])
-      }
+      // TODO non-cache the collections
+      // const index = state.findIndex(coll => (
+      //   isEqual(coll.params, action.meta.params)
+      // ))
+      // if (index === -1) {
+      //   return state.concat([collectionReducer(undefined, action)])
+      // }
 
-      return state.slice(0, index)
-        .concat([collectionReducer(state[index], action)])
-        .concat(state.slice(index + 1))
+      // return state.slice(0, index)
+      //   .concat([collectionReducer(state[index], action)])
+      //   .concat(state.slice(index + 1))
+      const newState = []
+      newState.push(collectionReducer(undefined, action))
+      return newState
+    }
     case CREATE_SUCCESS:
     case DELETE_SUCCESS:
+    case DELETE_BUCKET_SUCCESS:
       // set fetchTime on all entries to null
       return state.map((item, idx) => (
         Object.assign({}, item, { fetchTime: null })
@@ -205,29 +223,32 @@ export function collectionsReducer (
   }
 }
 
-export function actionStatusReducer (state = actionStatusInitialState, action) {
+export const fetchActionStatusReducer = (state = actionStatusInitialState, action) => {
+  const idName = action.meta ? action.meta.idName : 'id'
   switch (action.type) {
     case CLEAR_ACTION_STATUS:
       return Object.assign({}, state, {
         [action.payload.action]: {}
       })
-    case CREATE:
+    case CREATE: {
       return Object.assign({}, state, {
         create: {
           pending: true,
           id: null
         }
       })
+    }
     case CREATE_SUCCESS:
-    case CREATE_ERROR:
+    case CREATE_ERROR: {
       return Object.assign({}, state, {
         create: {
           pending: false,
-          id: action.payload.id,
+          id: action.payload[idName],
           isSuccess: !action.error,
           payload: action.payload
         }
       })
+    }
     case UPDATE:
       return Object.assign({}, state, {
         update: {
@@ -262,6 +283,23 @@ export function actionStatusReducer (state = actionStatusInitialState, action) {
           payload: action.payload // probably null...
         }
       })
+    case DELETE_BUCKET:
+      return Object.assign({}, state, {
+        delete: {
+          pending: true,
+          id: action.meta.ids
+        }
+      })
+    case DELETE_BUCKET_SUCCESS:
+    case DELETE_BUCKET_ERROR:
+      return Object.assign({}, state, {
+        delete: {
+          pending: false,
+          id: action.meta.ids,
+          isSuccess: !action.error,
+          payload: action.payload // probably null...
+        }
+      })
     default:
       return state
   }
@@ -272,17 +310,17 @@ function modelReducer (
   state = initialState,
   action,
   {
-    actionStatusReducer = actionStatusReducer,
-    byIdReducer = byIdReducer,
-    collectionsReducer = collectionsReducer
+    actionStatusReducer = fetchActionStatusReducer,
+    byIdReducer = fetchByIdReducer,
+    collectionsReducer = fetchCollectionsReducer
   } = {}) {
   /* eslint-enable no-shadow, no-use-before-define */
-  const id = action.meta ? action.meta.id : undefined
+  // const id = action.meta ? action.meta.id : undefined
   switch (action.type) {
     case GARBAGE_COLLECT:
       return Object.assign({}, state, {
-        collections: collectionsReducer(state.collections, action),
-        byId: byIdReducer(state.byId, action)
+        byId: byIdReducer(state.byId, action),
+        collections: collectionsReducer(state.collections, action)
       })
     case CLEAR_MODEL_DATA:
       return Object.assign({}, modelInitialState)
@@ -292,27 +330,31 @@ function modelReducer (
       })
     case FETCH:
     case FETCH_SUCCESS:
-    case FETCH_ERROR:
+    case FETCH_ERROR: {
+      // !!!Important byIdReducer must execution before collectionsReducer.
       return Object.assign({}, state, {
-        collections: collectionsReducer(state.collections, action),
-        byId: byIdReducer(state.byId, action)
+        byId: byIdReducer(state.byId, action),
+        collections: collectionsReducer(state.collections, action)
       })
+    }
     case FETCH_ONE:
     case FETCH_ONE_SUCCESS:
     case FETCH_ONE_ERROR:
       return Object.assign({}, state, {
         byId: byIdReducer(state.byId, action)
       })
-    case CREATE:
+    case CREATE: {
       return Object.assign({}, state, {
         actionStatus: actionStatusReducer(state.actionStatus, action)
       })
-    case CREATE_SUCCESS:
+    }
+    case CREATE_SUCCESS: {
       return Object.assign({}, state, {
-        collections: collectionsReducer(state.collections, action),
         byId: byIdReducer(state.byId, action),
+        collections: collectionsReducer(state.collections, action),
         actionStatus: actionStatusReducer(state.actionStatus, action)
       })
+    }
     case CREATE_ERROR:
       return Object.assign({}, state, {
         actionStatus: actionStatusReducer(state.actionStatus, action)
@@ -326,12 +368,22 @@ function modelReducer (
       })
     case DELETE:
     case DELETE_SUCCESS:
-    case DELETE_ERROR:
+    case DELETE_ERROR: {
       return Object.assign({}, state, {
-        collections: collectionsReducer(state.collections, action),
         byId: byIdReducer(state.byId, action),
+        collections: collectionsReducer(state.collections, action),
         actionStatus: actionStatusReducer(state.actionStatus, action)
       })
+    }
+    case DELETE_BUCKET:
+    case DELETE_BUCKET_SUCCESS:
+    case DELETE_BUCKET_ERROR: {
+      return Object.assign({}, state, {
+        byId: byIdReducer(state.byId, action),
+        collections: collectionsReducer(state.collections, action),
+        actionStatus: actionStatusReducer(state.actionStatus, action)
+      })
+    }
     default:
       return state
   }
@@ -342,20 +394,24 @@ export default function crudReducer (
   state = initialState,
   action,
   {
-    actionStatusReducer = actionStatusReducer,
-    byIdReducer = byIdReducer,
-    collectionsReducer = collectionsReducer
+    actionStatusReducer = fetchActionStatusReducer,
+    byIdReducer = fetchByIdReducer,
+    collectionsReducer = fetchCollectionsReducer
   } = {}) {
   /* eslint-enable no-shadow, no-use-before-define */
   switch (action.type) {
-    case GARBAGE_COLLECT:
+    case GARBAGE_COLLECT: {
       return Object.keys(state).reduce((newState, model) => (
         Object.assign({}, newState, {
-          [model]: modelReducer(state[model], action, {
-            actionStatusReducer, byIdReducer, collectionsReducer
-          })
+          [model]: modelReducer(state[model], action,
+            {
+              actionStatusReducer,
+              byIdReducer,
+              collectionsReducer
+            })
         })
       ), {})
+    }
     case CLEAR_MODEL_DATA:
     case CLEAR_ACTION_STATUS:
     case FETCH:
@@ -373,12 +429,19 @@ export default function crudReducer (
     case DELETE:
     case DELETE_SUCCESS:
     case DELETE_ERROR:
+    case DELETE_BUCKET:
+    case DELETE_BUCKET_SUCCESS:
+    case DELETE_BUCKET_ERROR:
+    {
       const model = (action.meta && action.meta.model) || action.payload.model
       return Object.assign({}, state, {
         [model]: modelReducer(state[model], action, {
-          actionStatusReducer, byIdReducer, collectionsReducer
+          actionStatusReducer,
+          byIdReducer,
+          collectionsReducer
         })
       })
+    }
     default:
       return state
   }

@@ -309,21 +309,27 @@ class Request {
  * Fetch
  */
 function Fetch (options) {
+  const methods = ['delete', 'get', 'head', 'options', 'post', 'put', 'patch']
   if (!(this instanceof Fetch)) {
-    return new Fetch(options)
+    const fetchVv = new Fetch(options)
+    methods.forEach((method) => {
+      fetchVv[method] = (url) => {
+        const opts = assign({}, this.options)
+        return new Request(method, url, opts)
+      }
+    })
+
+    return fetchVv
   }
+  methods.forEach((method) => {
+    this[method] = (url) => {
+      const opts = assign({}, this.options)
+      return new Request(method, url, opts)
+    }
+  })
 
   this.options = options || {}
 }
-
-const methods = ['delete', 'get', 'head', 'options', 'post', 'put', 'patch']
-
-methods.forEach((method) => {
-  this[method] = (url) => {
-    const opts = assign({}, this.options)
-    return new Request(method, url, opts)
-  }
-})
 
 /**
  * export

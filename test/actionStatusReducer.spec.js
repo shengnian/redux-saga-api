@@ -1,6 +1,6 @@
 import expect from 'expect'
 import deepFreeze from 'deep-freeze'
-import { actionStatusReducer } from '../src/reducers'
+import { fetchActionStatusReducer } from '../src/reducers'
 import {
   CLEAR_ACTION_STATUS,
   CREATE, CREATE_SUCCESS, CREATE_ERROR,
@@ -38,7 +38,7 @@ describe('actionStatusReducer', () => {
     actionsList.forEach(({ statusKey }) => {
       it(`clears status for ${statusKey} actions`, () => {
         const action = { type: CLEAR_ACTION_STATUS, payload: { action: statusKey } }
-        const newState = actionStatusReducer(initialState, action)
+        const newState = fetchActionStatusReducer(initialState, action)
         expect(newState[statusKey]).toEqual({})
       })
     })
@@ -48,7 +48,7 @@ describe('actionStatusReducer', () => {
       it(`${actionString} sets id and sets pending to true`, () => {
         const meta = initAction === CREATE ? undefined : { id: 1 }
         const action = { type: initAction, meta }
-        const newState = actionStatusReducer(initialState, action)
+        const newState = fetchActionStatusReducer(initialState, action)
         expect(newState[statusKey].pending).toEqual(true)
         expect(newState[statusKey].id).toEqual(initAction === CREATE ? null : 1)
       })
@@ -58,8 +58,8 @@ describe('actionStatusReducer', () => {
     actionsList.forEach(({ successAction, statusKey, actionString }) => {
       it(`${actionString}_SUCCESS sets payload, etc`, () => {
         const payload = { payload: true, id: 1 }
-        const action = { type: successAction, meta: { id: 1 }, payload, error: false }
-        const newState = actionStatusReducer(initialState, action)
+        const action = { type: successAction, meta: { idName: 'id', id: 1 }, payload, error: false }
+        const newState = fetchActionStatusReducer(initialState, action)
         const statusObject = newState[statusKey]
         expect(statusObject.pending).toEqual(false)
         expect(statusObject.id).toEqual(1)
@@ -73,7 +73,7 @@ describe('actionStatusReducer', () => {
       it(`${actionString}_ERROR sets error, etc`, () => {
         const error = { error: 'error data' }
         const action = { type: errorAction, meta: { id: 1 }, payload: error, error: true }
-        const newState = actionStatusReducer(initialState, action)
+        const newState = fetchActionStatusReducer(initialState, action)
         const statusObject = newState[statusKey]
         expect(statusObject.pending).toEqual(false)
         expect(statusObject.id).toEqual(errorAction === CREATE_ERROR ? undefined : 1)

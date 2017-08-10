@@ -64,7 +64,7 @@ function getAction (effect) {
 
 describe('apiFetch', () => {
   it('invokes API client methods', () => {
-    const gen = apiFetch(apiClient)(fetchWidgets(1))
+    const gen = apiFetch(apiClient, fetchWidgets(1))
     const apiCall = gen.next().value
     expect(apiCall).toEqual(
       call(apiClient.get, '/widgets', {
@@ -75,7 +75,7 @@ describe('apiFetch', () => {
     )
   })
   it('dispatches success event', () => {
-    const gen = apiFetch(apiClient)(fetchWidgets(1))
+    const gen = apiFetch(apiClient, fetchWidgets(1))
     const apiCall = gen.next().value
     const putSuccess = gen.next(widgets).value
     if (!putSuccess) { throw new Error('undefined yield value') }
@@ -86,7 +86,7 @@ describe('apiFetch', () => {
   })
   it('dispatches error event', () => {
     const error = new Error('fetch failed')
-    const gen = apiFetch(apiClient)(fetchWidgets(1))
+    const gen = apiFetch(apiClient, fetchWidgets(1))
     const apiCall = gen.next().value
     const putError = gen.throw(error).value
     if (!putError) { throw new Error('undefined yield value') }
@@ -96,7 +96,7 @@ describe('apiFetch', () => {
     expect(action.payload).toBe(error)
   })
   it('attaches `fetchTime` property to dispatched action meta', () => {
-    const gen = apiFetch(apiClient)(fetchWidgets(1))
+    const gen = apiFetch(apiClient, fetchWidgets(1))
     const apiCall = gen.next().value
     const putSuccess = gen.next(widgets).value
     if (!putSuccess) { throw new Error('undefined yield value') }

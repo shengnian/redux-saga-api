@@ -1,6 +1,6 @@
 import expect from 'expect'
 import deepFreeze from 'deep-freeze'
-import { collectionReducer } from '../src/reducers'
+import { fetchCollectionReducer } from '../src/reducers'
 import {
   FETCH, FETCH_SUCCESS, FETCH_ERROR
 } from '../src/actionTypes'
@@ -20,7 +20,7 @@ describe('collectionReducer', () => {
   it('FETCH', () => {
     const action = { type: FETCH, meta: { params } }
 
-    const newState = collectionReducer(initialState, action)
+    const newState = fetchCollectionReducer(initialState, action)
 
     expect(newState.params).toEqual(params)
     expect(newState.fetchTime).toEqual(0)
@@ -37,7 +37,7 @@ describe('collectionReducer', () => {
       meta: { fetchTime, params, idName: 'testId' }
     }
 
-    const newState = collectionReducer(initialState, action)
+    const newState = fetchCollectionReducer(initialState, action)
 
     expect(newState.params).toEqual(params)
     expect(newState.ids).toEqual([1, 2])
@@ -49,7 +49,7 @@ describe('collectionReducer', () => {
     const error = { error: 'oh no' }
     const action = { type: FETCH_ERROR, payload: error, meta: { params } }
 
-    const newState = collectionReducer(initialState, action)
+    const newState = fetchCollectionReducer(initialState, action)
 
     expect(newState.params).toEqual(params)
     expect(newState.error).toEqual(error)

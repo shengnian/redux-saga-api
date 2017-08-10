@@ -4,20 +4,28 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-/* global T $Shape */
+var _extends2 = require('babel-runtime/helpers/extends');
+
+var _extends3 = _interopRequireDefault(_extends2);
 
 exports.fetchCollection = fetchCollection;
 exports.fetchRecord = fetchRecord;
 exports.createRecord = createRecord;
 exports.updateRecord = updateRecord;
 exports.deleteRecord = deleteRecord;
+exports.deleteBucketRecord = deleteBucketRecord;
 exports.clearActionStatus = clearActionStatus;
 exports.apiCall = apiCall;
 exports.clearModelData = clearModelData;
 
 var _actionTypes = require('./actionTypes');
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// eslint-disable-next-line
+
+
+/* eslint-disable no-unused-vars */
 function fetchCollection(model, path) {
   var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var opts = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
@@ -42,6 +50,7 @@ function fetchCollection(model, path) {
     }
   };
 }
+/* global T $Shape */
 
 function fetchRecord(model, id, path) {
   var params = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
@@ -74,13 +83,13 @@ function createRecord(model, path) {
 
   var fetchConfig = opts.fetchConfig || undefined;
   var method = opts.method || 'post';
-
   return {
     type: _actionTypes.CREATE,
     meta: {
       success: _actionTypes.CREATE_SUCCESS,
       failure: _actionTypes.CREATE_ERROR,
-      model: model
+      model: model,
+      idName: opts.idName || 'id'
     },
     payload: {
       fetchConfig: fetchConfig,
@@ -142,6 +151,33 @@ function deleteRecord(model, id, path) {
   };
 }
 
+function deleteBucketRecord(model) {
+  var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+  var path = arguments[2];
+  var params = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  var opts = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+
+  var fetchConfig = opts.fetchConfig || undefined;
+  var method = opts.method || 'post';
+
+  return {
+    type: _actionTypes.DELETE_BUCKET,
+    meta: {
+      success: _actionTypes.DELETE_BUCKET_SUCCESS,
+      failure: _actionTypes.DELETE_BUCKET_ERROR,
+      model: model,
+      ids: ids
+    },
+    payload: {
+      fetchConfig: fetchConfig,
+      method: method,
+      data: ids,
+      path: path,
+      params: params
+    }
+  };
+}
+
 function clearActionStatus(model, action) {
   return {
     type: _actionTypes.CLEAR_ACTION_STATUS,
@@ -159,7 +195,7 @@ function apiCall(success, failure, method, path) {
 
   return {
     type: _actionTypes.API_CALL,
-    meta: _extends({}, meta, {
+    meta: (0, _extends3.default)({}, meta, {
       success: success,
       failure: failure
     }),
