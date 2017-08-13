@@ -97,7 +97,9 @@ function selectCollection(modelName, crud) {
 
   var fetchTime = collection.fetchTime;
 
-  if (fetchTime === 0) {
+  if (collection.error) {
+    throw Error('' + collection.error);
+  } else if (fetchTime === 0) {
     return isLoading({ needsFetch: false });
   } else if (!recent(fetchTime, opts)) {
     return isLoading({ needsFetch: true });

@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-api",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "Framework CRUD REST style api function with redux-saga",
   "main": "lib/index.js",
   "files": [
@@ -13,7 +13,7 @@
     "clean": "rimraf lib dist es",
     "build": "npm run build:commonjs && npm run build:types && npm run build:umd && npm run build:umd:min && npm run build:es",
     "prepublishOnly": "npm run clean && npm run test && npm run build",
-    "postpublish": "git add -A package.json src lib es && git commit -m \"publish v1.0.8\"; scripts/tag-with-changelog.sh v1.0.8 && git push && git push --tags",
+    "postpublish": "git add -A package.json src lib es && git commit -m \"publish v1.1.0\" && git tag -a -m \"publish v1.1.0\" v1.1.0 HEAD && git push && git push --tags",
     "posttest": "npm run lint",
     "flow": "flow check",
     "lint": "eslint src test",

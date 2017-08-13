@@ -2,14 +2,16 @@
 class ApiClient {
   constructor (passedConfig) {
     const baseConfig = {
+      mode: 'cors',
+      cache: 'no-cache',
       bodyEncoder: JSON.stringify,
-      credentials: 'same-origin',
+      credentials: 'include',
       format: 'json',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
-      methods: ['get', 'post', 'put', 'patch', 'delete']
+      methods: ['get', 'post', 'put', 'patch', 'delete', 'options', 'head']
     }
 
     if (!passedConfig.basePath) {
@@ -47,6 +49,21 @@ class ApiClient {
         }).then(response => ({ response, format }))
           .then(this.handleErrors)
           .then(response => response[format]())
+          .catch((err) => {
+            const errStr = err.toString()
+            if (errStr.indexOf('TypeError') >= 0) {
+              const dateTime = +new Date()
+              const errMsg = {
+                status: -1,
+                message: err.toString(),
+                error: false,
+                timestamp: Math.floor(dateTime / 1000)
+              }
+              throw JSON.stringify(errMsg)
+            } else {
+              throw err
+            }
+          })
       }
     })
   }
@@ -65,12 +82,12 @@ class ApiClient {
     if (!response.ok) {
       return response[format]()
       // if response parsing failed send back the entire response object
-        .catch(() => {
-          throw response
-        })
+      //   .catch(() => {
+      //     throw response
+      //   })
         // else send back the parsed error
         .then((parsedErr) => {
-          throw parsedErr
+          throw JSON.stringify(parsedErr)
         })
     }
     return response
